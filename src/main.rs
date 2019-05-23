@@ -31,7 +31,7 @@ fn main() {
     let mut state = State::new();
 
     // This is an infinite loop. The program will run forever
-    // as a daemon till it recieves SIGINIT
+    // as a daemon till it recieves SIGINT
     // If it recieves an unknown signal, it panics and dies
     loop {
         // The messages recieved on rx are safe. Hopefully. So a naked
