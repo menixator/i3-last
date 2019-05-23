@@ -1,3 +1,19 @@
+// i3-last - a helper program for i3 to switch between windows
+// Copyright (C) 2019  Ahmed Miljau<ahmed.miljau@gmail.com>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Renamed as i3Event to prevent clash with internal
 // Event type
 use i3ipc::{
@@ -23,7 +39,6 @@ pub fn spawn_i3listener(i3tx: Sender<Event>) {
     };
     // Spawn a thread that runs forever
     thread::spawn(move || {
-
         // Subscribe to only window events.
         // We aren't interested in anything else
         let subs = [Subscription::Window];
