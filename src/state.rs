@@ -21,26 +21,22 @@ use i3ipc::I3Connection;
 
 const MAX_WINDOWS: usize = 15;
 
-#[derive(Copy, Clone)]
-pub enum Action {
+#[derive(Clone)]
+pub enum Event {
     EXIT,
     FORWARD,
     BACKWARD,
     LAST,
-    FOCUSCHANGED,
-    WINDOWCLOSED,
+    FOCUSCHANGED(reply::Node),
+    WINDOWCLOSED(reply::Node),
 }
 
-pub struct Event {
-    pub variant: Action,
-    pub container: Option<reply::Node>,
-}
 pub struct State {
     pub previous: Vec<i64>,
     pub newer: Vec<i64>,
     pub enchanted: bool,
     pub ench_winid: i64,
-    pub last_enchant: Option<Action>,
+    pub last_enchant: Option<Event>,
     pub connection: I3Connection,
     // Current window id
     pub current: i64,
@@ -86,19 +82,18 @@ impl State {
     }
 
     pub fn next(&mut self) {
-        self.seek(Action::FORWARD);
+        self.seek(Event::FORWARD);
     }
 
     pub fn prev(&mut self) {
-        self.seek(Action::BACKWARD);
+        self.seek(Event::BACKWARD);
     }
 
     pub fn add_window(&mut self, window_id: i64) {
         if self.enchanted {
             self.enchanted = false;
 
-            // Check if the currently focused window
-            // is the ench_winid
+            // Check if the currently focused window is the ench_winid
             if self.ench_winid == window_id {
                 // ignore it.
                 self.ench_winid = -1;
@@ -127,16 +122,16 @@ impl State {
         self.current = window_id;
     }
 
-    fn seek(&mut self, action: Action) {
+    fn seek(&mut self, action: Event) {
         let remove_from: &mut Vec<i64>;
         let mut add_to: &mut Vec<i64>;
 
         match action {
-            Action::BACKWARD => {
+            Event::BACKWARD => {
                 remove_from = &mut self.previous;
                 add_to = &mut self.newer;
             }
-            Action::FORWARD => {
+            Event::FORWARD => {
                 remove_from = &mut self.newer;
                 add_to = &mut self.previous;
             }

@@ -15,14 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // Multi-producer, single-consumer FIFO queue communication primitives for
 // communication between the threads
-
 use std::sync::mpsc::{channel as mkchannel, Receiver, Sender};
 
 // The program's state is in a single structure
 mod state;
 // Import required components into the global scope
 // so that it can be accessed without the namespace
-use state::{Action, Event, State};
+use state::{Event, State};
 
 // The program's i3 interface.
 // While I call it an interface, it only exports a single
@@ -57,21 +56,18 @@ fn main() {
             // requests to jump back to the last window.
             // last_enchant will contain the last action taken
             // by the program
-            Ok(Event {
-                variant: Action::LAST,
-                ..
-            }) => match state.last_enchant {
+            Ok(Event::LAST) => match state.last_enchant {
                 None => {
                     continue;
                 }
                 // If the last action was a backward action
                 // do the opposite.
-                Some(Action::BACKWARD) => {
+                Some(Event::BACKWARD) => {
                     state.next();
                 }
                 // If the last action was a forward action
                 // do the opposite.
-                Some(Action::FORWARD) => {
+                Some(Event::FORWARD) => {
                     state.prev();
                 }
                 _ => {
@@ -81,42 +77,27 @@ fn main() {
                 }
             },
             // This action signifies when a window is closed.
-            Ok(Event {
-                variant: Action::WINDOWCLOSED,
-                container,
-            }) => {
-                state.purge(container.unwrap().id);
+            Ok(Event::WINDOWCLOSED(container)) => {
+                state.purge(container.id);
             }
             // This action gets triggered when the user wants to go
             // backwards.
-            Ok(Event {
-                variant: Action::BACKWARD,
-                ..
-            }) => {
+            Ok(Event::BACKWARD) => {
                 // State contains the implementation
                 state.prev();
             }
             // Same as above but for forward.
-            Ok(Event {
-                variant: Action::FORWARD,
-                ..
-            }) => {
+            Ok(Event::FORWARD) => {
                 state.next();
             }
 
             // Updates the data in state when the focus changes
-            Ok(Event {
-                variant: Action::FOCUSCHANGED,
-                container,
-            }) => {
-                state.add_window(container.unwrap().id);
+            Ok(Event::FOCUSCHANGED(container)) => {
+                state.add_window(container.id);
             }
 
             // Exits the application
-            Ok(Event {
-                variant: Action::EXIT,
-                ..
-            }) => {
+            Ok(Event::EXIT) => {
                 break;
             }
 

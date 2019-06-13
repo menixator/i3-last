@@ -21,7 +21,7 @@ use std::sync::mpsc::Sender;
 use std::thread;
 
 // Import the internal types
-use super::state::{Action, Event};
+use super::state::Event;
 
 use std::process::exit;
 // SIGRTMIN isn't actually 36. Conventionally SIGRTMIN has 32 but, the glibc POSIX threads
@@ -48,37 +48,17 @@ pub fn spawn_siglistener(sigtx: Sender<Event>) {
         for sig in signals.forever() {
             match sig {
                 SIG_FORWARD => {
-                    sigtx
-                        .send(Event {
-                            variant: Action::FORWARD,
-                            container: None,
-                        })
-                        .unwrap();
+                    sigtx.send(Event::FORWARD).unwrap();
                 }
                 SIG_BACKWARD => {
-                    sigtx
-                        .send(Event {
-                            variant: Action::BACKWARD,
-                            container: None,
-                        })
-                        .unwrap();
+                    sigtx.send(Event::BACKWARD).unwrap();
                 }
                 SIG_LAST => {
-                    sigtx
-                        .send(Event {
-                            variant: Action::LAST,
-                            container: None,
-                        })
-                        .unwrap();
+                    sigtx.send(Event::LAST).unwrap();
                 }
 
                 SIGINT => {
-                    sigtx
-                        .send(Event {
-                            variant: Action::EXIT,
-                            container: None,
-                        })
-                        .unwrap();
+                    sigtx.send(Event::EXIT).unwrap();
                     break;
                 }
                 _ => {}

@@ -25,7 +25,7 @@ use std::sync::mpsc::Sender;
 use std::thread;
 
 // Import internal types
-use super::state::{Action, Event};
+use super::state::Event;
 
 pub fn spawn_i3listener(i3tx: Sender<Event>) {
     // Connect to i3
@@ -60,22 +60,14 @@ pub fn spawn_i3listener(i3tx: Sender<Event>) {
                     container,
                     ..
                 })) => {
-                    i3tx.send(Event {
-                        variant: Action::WINDOWCLOSED,
-                        container: Some(container),
-                    })
-                    .unwrap();
+                    i3tx.send(Event::WINDOWCLOSED(container)).unwrap();
                 }
                 Ok(i3Event::WindowEvent(WindowEventInfo {
                     change: WindowChange::Focus,
                     container,
                     ..
                 })) => {
-                    i3tx.send(Event {
-                        variant: Action::FOCUSCHANGED,
-                        container: Some(container),
-                    })
-                    .unwrap();
+                    i3tx.send(Event::FOCUSCHANGED(container)).unwrap();
                 }
                 Err(err) => {
                     eprintln!("unknown error within subscription: {}", err);
