@@ -112,6 +112,7 @@ impl State {
         if self.current != -1 {
             State::remove_from_vec(&mut self.previous, self.current);
             self.previous.push(self.current);
+            self.newer.clear();
             State::clamp(&mut self.previous);
         }
         State::remove_from_vec(&mut self.previous, window_id);
