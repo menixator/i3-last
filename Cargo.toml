@@ -1,5 +1,5 @@
 [package]
-name = "i3last"
+name = "i3-last"
 version = "0.1.0"
 authors = ["menixator <ahmed.miljau@gmail.com>"]
 edition = "2018"
