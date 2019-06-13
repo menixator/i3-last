@@ -9,7 +9,7 @@ order that they were last accessed.
 - Start i3-last within i3-config
 - Add some bindings
 ```
-bindsym $mod+Shift+Tab exec --no-startup-id pkill -SIGRTMIN+2 i3-last &
 bindsym $mod+Tab exec --no-startup-id pkill -SIGRTMIN+3 i3-last&
-bindsym $mod+b exec --no-startup-id pkill -SIGRTMIN+4 i3&
+bindsym $mod+Shift+Tab exec --no-startup-id pkill -SIGRTMIN+2 i3-last&
+bindsym $mod+b exec --no-startup-id pkill -SIGRTMIN+4 i3-last&
 ```
