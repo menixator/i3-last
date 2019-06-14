@@ -13,8 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// Multi-producer, single-consumer FIFO queue communication primitives for
-// communication between the threads
 
 use i3ipc::reply;
 use i3ipc::I3Connection;
