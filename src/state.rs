@@ -111,12 +111,6 @@ impl State {
         State::remove_from_vec(&mut self.previous, window_id);
         State::remove_from_vec(&mut self.newer, window_id);
 
-        State::clamp(&mut self.newer);
-
-        if self.current != -1 {
-            State::clamp(&mut self.previous);
-        }
-
         self.current = window_id;
     }
 
