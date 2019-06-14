@@ -66,8 +66,8 @@ impl State {
         let found = vec.iter().position(|&id| id == window_id);
         match found {
             None => Some(false),
-            Some(_) => {
-                vec.remove(found.unwrap());
+            Some(index) => {
+                vec.remove(index);
                 Some(true)
             }
         }
