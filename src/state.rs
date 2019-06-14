@@ -108,6 +108,7 @@ impl State {
         State::remove_from_vec(&mut self.previous, window_id);
         State::remove_from_vec(&mut self.newer, window_id);
 
+        self.last_enchant = Some(Event::FORWARD);
         self.current = window_id;
     }
 
