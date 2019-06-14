@@ -15,13 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // Multi-producer, single-consumer FIFO queue communication primitives for
 // communication between the threads
+use i3ipc::I3Connection;
 use std::sync::mpsc::{channel as mkchannel, Receiver, Sender};
-
 // The program's state is in a single structure
 mod state;
 // Import required components into the global scope
 // so that it can be accessed without the namespace
 use state::{Event, State};
+use std::process::exit;
 
 // The program's i3 interface.
 // While I call it an interface, it only exports a single
@@ -33,6 +34,15 @@ mod i3;
 mod signals;
 
 fn main() {
+    // Create a connection to i3
+    let mut connection: I3Connection = match I3Connection::connect() {
+        Ok(connection) => connection,
+        Err(err) => {
+            eprintln!("failed to connect to i3 due to err: {:?}", err);
+            exit(1);
+        }
+    };
+
     // Initialize the channels
     let (tx, rx): (Sender<Event>, Receiver<Event>) = mkchannel();
 
@@ -63,12 +73,12 @@ fn main() {
                 // If the last action was a backward action
                 // do the opposite.
                 Some(Event::BACKWARD) => {
-                    state.next();
+                    focus(&mut connection, state.next());
                 }
                 // If the last action was a forward action
                 // do the opposite.
                 Some(Event::FORWARD) => {
-                    state.prev();
+                    focus(&mut connection, state.prev());
                 }
                 _ => {
                     // An almost impossible case.
@@ -84,11 +94,11 @@ fn main() {
             // backwards.
             Ok(Event::BACKWARD) => {
                 // State contains the implementation
-                state.prev();
+                focus(&mut connection, state.prev());
             }
             // Same as above but for forward.
             Ok(Event::FORWARD) => {
-                state.next();
+                focus(&mut connection, state.next());
             }
 
             // Updates the data in state when the focus changes
@@ -105,5 +115,14 @@ fn main() {
                 panic!("a recieve error occured: {:?}", err);
             }
         }
+    }
+}
+
+// Helper to focus on a window.
+fn focus(connection: &mut I3Connection, result: Option<i64>) {
+    if let Some(win_id) = result {
+        connection
+            .run_command(&format!("[con_id={}] focus", win_id))
+            .ok();
     }
 }

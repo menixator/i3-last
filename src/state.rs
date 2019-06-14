@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use i3ipc::reply;
-use i3ipc::I3Connection;
 
 const MAX_WINDOWS: usize = 15;
 
@@ -35,7 +34,6 @@ pub struct State {
     pub enchanted: bool,
     pub ench_winid: i64,
     pub last_enchant: Option<Event>,
-    pub connection: I3Connection,
     // Current window id
     pub current: i64,
 }
@@ -49,7 +47,6 @@ impl State {
             ench_winid: -1,
 
             current: -1,
-            connection: I3Connection::connect().unwrap(),
             last_enchant: None,
         }
     }
@@ -79,12 +76,12 @@ impl State {
         }
     }
 
-    pub fn next(&mut self) {
-        self.seek(Event::FORWARD);
+    pub fn next(&mut self) -> Option<i64> {
+        return self.seek(Event::FORWARD);
     }
 
-    pub fn prev(&mut self) {
-        self.seek(Event::BACKWARD);
+    pub fn prev(&mut self) -> Option<i64> {
+        return self.seek(Event::BACKWARD);
     }
 
     pub fn add_window(&mut self, window_id: i64) {
@@ -114,7 +111,7 @@ impl State {
         self.current = window_id;
     }
 
-    fn seek(&mut self, action: Event) {
+    fn seek(&mut self, action: Event) -> Option<i64> {
         let remove_from: &mut Vec<i64>;
         let mut add_to: &mut Vec<i64>;
 
@@ -133,11 +130,11 @@ impl State {
         }
 
         if remove_from.len() == 0 {
-            return;
+            return None;
         }
 
         match remove_from.pop() {
-            None => return,
+            None => return None,
             Some(win_id) => {
                 self.enchanted = true;
                 self.ench_winid = win_id;
@@ -149,10 +146,7 @@ impl State {
                     State::clamp(&mut add_to);
                 }
                 self.current = win_id;
-
-                self.connection
-                    .run_command(&format!("[con_id={}] focus", win_id))
-                    .ok();
+                return Some(win_id);
             }
         }
     }
