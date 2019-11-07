@@ -74,7 +74,7 @@ impl State {
     // A helper method that removes any elements longer than MAX_WINDOWS from a vector type.
     fn clamp(vec: &mut Vec<i64>) {
         if vec.len() > MAX_WINDOWS {
-            vec.drain(MAX_WINDOWS..vec.len());
+            vec.drain(0..(vec.len() - MAX_WINDOWS));
         }
     }
 
@@ -130,9 +130,9 @@ impl State {
 
         // Move the window id in `current` - the window that was focused to the stack of windows
         // that we have already visited.
-        if let Some(current) = self.current  {
+        if let Some(current) = self.current {
             // Make sure that there are no duplicates.
-            State::remove_from_vec(&mut self.previous,current);
+            State::remove_from_vec(&mut self.previous, current);
             self.previous.push(current);
             // Whenever a new window is focused by the user, while moving backwards, the history of the windows we have
             // moved backwards through will get reset.
@@ -194,7 +194,7 @@ impl State {
                 // Move the currently focused window's id to the add_to vector.
                 if let Some(current) = self.current {
                     // Prevent any duplicates.
-                    State::remove_from_vec(&mut add_to,current);
+                    State::remove_from_vec(&mut add_to, current);
                     add_to.push(current);
                     // Clamping the length.
                     State::clamp(&mut add_to);
@@ -203,5 +203,22 @@ impl State {
                 return Some(win_id);
             }
         }
+    }
+}
+
+// Tests if the length of the vector that holds the windows gets clamped correctly.
+// When more than MAX_WINDOWS windows are added, the vector should remove older window ids.
+#[test]
+fn check_clamping() {
+    let mut state = State::new();
+
+    let max = 100;
+    for i in 1..max {
+        state.add_window(i);
+    }
+
+    assert_eq!(state.next(), None);
+    for i in 0..MAX_WINDOWS {
+        assert_eq!(state.prev(), Some(max - (i as i64) - 2));
     }
 }
