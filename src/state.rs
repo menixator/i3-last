@@ -45,20 +45,16 @@ pub struct State {
     // The stack that holds the list of windows that the user has decided to move back over.
     pub newer: Vec<i64>,
 
-    // Whether or not i3-last has issued a command to i3. This is to prevent the focus change
-    // commands from affecting the state.
-    pub enchanted: bool,
-
     // If i3-last is controlling i3, this i64 will have been populated with a window id that was
-    // being focused. If the focus was changed and `enchanted` was `true`, this member will have a
-    // 64bit integer that refers to a window.
-    pub ench_winid: i64,
+    // being focused. If the focus was changed this member will have an Option<64> bit integer that
+    // refers to a window.
+    pub ench_winid: Option<i64>,
 
     // The last enchant that the state issued. Used to jump to the last window. This can only be
     // `Event::FORWARD`, `Event::BACKWARD`, or None.
     pub last_enchant: Option<Event>,
     // Current window id
-    pub current: i64,
+    pub current: Option<i64>,
 }
 
 impl State {
@@ -69,9 +65,8 @@ impl State {
             newer: Vec::new(),
 
             // Default values for the remaining properties.
-            enchanted: false,
-            ench_winid: -1,
-            current: -1,
+            ench_winid: None,
+            current: None,
             last_enchant: None,
         }
     }
@@ -99,8 +94,11 @@ impl State {
     pub fn purge(&mut self, id: i64) {
         State::remove_from_vec(&mut self.previous, id);
         State::remove_from_vec(&mut self.newer, id);
-        if self.current == id {
-            self.current = -1;
+        match self.current {
+            Some(current) if current == id => {
+                self.current = None;
+            }
+            _ => {}
         }
     }
 
@@ -117,28 +115,25 @@ impl State {
     // Adds a window to the history. This method is called whenever a new window is focused.
     pub fn add_window(&mut self, window_id: i64) {
         // Check if the state object issued any commands to i3
-        if self.enchanted {
-            // Reset the value
-            self.enchanted = false;
-
+        if let Some(ench_winid) = self.ench_winid {
             // Check if the currently focused window is the window that we wanted to focus on
-            if self.ench_winid == window_id {
+            if ench_winid == window_id {
                 // If it is indeed that window, reset the ench_winid and return. The history will
                 // not get modified.
-                self.ench_winid = -1;
+                self.ench_winid = None;
                 return;
             } else {
                 // Assume a failure, and add the currently focused window to the history.
-                self.ench_winid = -1;
+                self.ench_winid = None;
             }
         }
 
         // Move the window id in `current` - the window that was focused to the stack of windows
         // that we have already visited.
-        if self.current != -1 {
+        if let Some(current) = self.current  {
             // Make sure that there are no duplicates.
-            State::remove_from_vec(&mut self.previous, self.current);
-            self.previous.push(self.current);
+            State::remove_from_vec(&mut self.previous,current);
+            self.previous.push(current);
             // Whenever a new window is focused by the user, while moving backwards, the history of the windows we have
             // moved backwards through will get reset.
             self.newer.clear();
@@ -154,7 +149,7 @@ impl State {
         self.last_enchant = Some(Event::FORWARD);
 
         // Set the `current` window to the new window id.
-        self.current = window_id;
+        self.current = Some(window_id);
     }
 
     // A helper function that can respond to `BACKWARD` and `FORWARD` events.
@@ -191,21 +186,20 @@ impl State {
                 // The state will be enchanted till the next focus event. If the next window that
                 // gets focused upon has the same window id as win_id, the focus event will have no
                 // effect on the stacks. However, the state will become disenchanted.
-                self.enchanted = true;
-                self.ench_winid = win_id;
+                self.ench_winid = Some(win_id);
 
                 // Clone and save the action we are doing so that we can reverse it.
                 self.last_enchant = Some(action.clone());
 
                 // Move the currently focused window's id to the add_to vector.
-                if self.current != -1 {
+                if let Some(current) = self.current {
                     // Prevent any duplicates.
-                    State::remove_from_vec(&mut add_to, self.current);
-                    add_to.push(self.current);
+                    State::remove_from_vec(&mut add_to,current);
+                    add_to.push(current);
                     // Clamping the length.
                     State::clamp(&mut add_to);
                 }
-                self.current = win_id;
+                self.current = Some(win_id);
                 return Some(win_id);
             }
         }
